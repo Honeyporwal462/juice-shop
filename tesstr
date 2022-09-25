@@ -1,0 +1,37 @@
+$todaydate= Get-Date -Format "yyyy-MM-dd"
+write-host $todaydate
+$token= "zyemon53q4345geqal3tn7irt6pd4zzpt52mt5g6osqwfh7ezcta"
+$headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+$headers.Add("Content-Type", "application/json")
+$auth = $token + ':' + $token
+$Encoded = [System.Text.Encoding]::UTF8.GetBytes($auth)
+$authorizationInfo = [System.Convert]::ToBase64String($Encoded)
+$headers.Add("Authorization", "Basic $($authorizationInfo)")
+#executing azure query to get all the wokitems id
+$body = "{
+`n`"query`": `"Select System.Id From WorkItems Where ([System.WorkItemType] = 'Issue') AND ([System.State] = 'To Do') AND ([System.AreaPath] = 'demo')`"
+`n}"
+$response = Invoke-RestMethod 'https://dev.azure.com/honeyporwal462/demo/_apis/wit/wiql?api-version=5.1' -Method 'POST' -Headers $headers -Body $body
+#$response | ConvertTo-Json
+$outArr = @()
+$data= $response.workItems.id
+Write-Host $data.Count
+$outArr += $data
+Write-Host $outArr
+if (($data).count -gt 0)
+{
+    foreach($value in $outArr)
+    {
+
+
+        $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+        $headers.Add("Content-Type", "application/json")
+        $headers.Add("Authorization", "Basic $($authorizationInfo)")
+        $url = "https://dev.azure.com/honeyporwal462/demo/_apis/wit/workitems/" + $value + "?api-version=5.1"
+        write-host $url
+        $response1 = Invoke-RestMethod $url  -Method 'GET' -Headers $headers
+        $resiltWorkitems=$response1 | ConvertTo-Json
+        write-host $resiltWorkitems
+    }
+}	
+	
